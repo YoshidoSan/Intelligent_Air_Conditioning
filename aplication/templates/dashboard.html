@@ -1,0 +1,413 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<button id="off_all" class="ui red button">Wyłącz klimatyzację</button>
+<h4 class="ui horizontal divider header">
+  <i class="exclamation triangle icon"></i>
+  Tuning reulatorów
+</h4>
+
+<div class="ui message">
+  <div class="header">
+  </div>
+  <p>Działanie klimatyzacji rozpocznij od uruchomienia funkcji autotuningu regulatrów klimatyzacji</p>
+</div>
+
+<div class="ui segment">
+  <div class="ui two column very relaxed grid">
+    {% for tunin in tuning %}
+    <div class="column">
+      <p></p>
+        Regulator temperatury
+      <p></p>
+      {% if tunin.humidity == 0 %}
+        Stan: Wymaga nastrojenia
+      {% else %}
+        Stan: Nastrojony
+      {% endif %}
+      <p></p>
+        <button id="start_tuning_temp" class="ui right labeled icon button">
+      {% if tunin.turned_on_temp == 0 %}
+        <i id="start_tuning_temp_icon" class="right arrow icon"></i>
+      {% else %}
+        <i id="start_tuning_temp_icon" class="loading spinner icon"></i>
+      {% endif %}
+            Rozpocznij strojenie
+        </button>
+    {% endfor %}
+
+      <p></p>
+    </div>
+    {% for tunin in tuning %}
+    <div class="column">
+      <p></p>
+        Regulator wilgotności
+      <p></p>
+      {% if tunin.humidity == 0 %}
+        Stan: Wymaga nastrojenia
+      {% else %}
+        Stan: Nastrojony
+      {% endif %}
+      <p></p>
+        <button id="start_tuning_wilg" class="ui right labeled icon button">
+      {% if tunin.turned_on_hum == 0 %}
+        <i id="start_tuning_wilg_icon" class="right arrow icon"></i>
+      {% else %}
+        <i id="start_tuning_wilg_icon" class="loading spinner icon"></i>
+      {% endif %}
+            Rozpocznij strojenie
+        </button>
+    {% endfor %}
+      <p></p>
+    </div>
+  </div>
+</div>
+
+
+<h4 class="ui horizontal divider header">
+  <i class="play icon"></i>
+  Tryb ciągły
+</h4>
+
+<div class="ui message">
+  <div class="header">
+  </div>
+  <p>Podaj docelową temperaturę i wilgotność pomieszczenia</p>
+</div>
+
+<div class="ui segment">
+  <div class="ui two column very relaxed grid">
+    <div class="column">
+      <p></p>
+      <p></p>
+        <div class="ui right labeled input">
+        <input id="ciagly_temp" type="text" placeholder="Podaj temperaturę..">
+        <div class="ui basic label">
+            °C
+        </div>
+        </div>
+      <p></p>
+      <div class="ui right labeled input">
+        <input id="ciagly_wilg" type="text" placeholder="Podaj wilgotność..">
+        <div class="ui basic label">
+            %
+        </div>
+        </div>
+    </div>
+    <div class="column">
+      <p></p>
+      {% for c in continous %}
+        <button id="start_ciagly" class="ui button">
+        {% if c.turned_on == 0 %}
+          <i id="start_ciagly_icon" class="play icon"></i>
+          Włącz tryb
+          </button>
+        <p></p>
+        <p></p>
+        <p></p>
+        Obecna zadana temperatura: brak
+        <p></p>
+        Obecna zadana wilgotność: brak
+        {% else %}
+          <i id="start_ciagly_icon" class="loading spinner icon"></i>
+          Włącz tryb
+          </button>
+        <p></p>
+        <p></p>
+        <p></p>
+        Obecna zadana temperatura: {{ c.temperature }}
+        <p></p>
+        Obecna zadana wilgotność: {{ c.humidity }}
+        {% endif %}
+      <p></p>
+      <p></p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+<h4 class="ui horizontal divider header">
+  <i class="calendar alternate outline icon"></i>
+  Tryb harmonogramu
+</h4>
+
+<div class="ui message">
+  <div class="header">
+  </div>
+  <p>Dodaj bloki, za pomocą których ustalisz plan pracy klimatyzacji</p>
+</div>
+
+<div class="ui segment">
+  <div class="ui two column very relaxed grid">
+    <div class="column">
+      <p></p>
+      <p></p>
+        <div class="ui right labeled input">
+          <div id="dodaj_harmo" class="ui teal labeled icon button">
+            Dodaj
+            <i class="add icon"></i>
+          </div>
+        </div>
+      <p></p>
+    </div>
+    <div class="column">
+      <p></p>
+      {% for s in schedule %}
+        <button id="start_harmo" class="ui button">
+        {% if s.turned_on == 0 %}
+          <i id="start_harmo_icon" class="play icon"></i>
+        {% else %}
+          <i id="start_harmo_icon" class="loading spinner icon"></i>
+        {% endif %}
+        Włącz tryb
+        </button>
+      <p></p>
+      {% endfor %}
+      <p></p>
+      <p></p>
+    </div>
+  </div>
+</div>
+
+<p>Obecny harmonogram dnia:</p>
+
+<table class="ui compact celled definition table">
+  <thead class="full-width">
+    <tr>
+      <th></th>
+      <th>Godzina rozpoczęcia</th>
+      <th>Godzina zakończenia</th>
+      <th>Temperatura</th>
+      <th>Wilgotność</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for record in records %}
+    <tr>
+      <td class="collapsing">
+        <div class="ui fitted slider checkbox">
+          <input id='{{ record.id }}' type="checkbox"> <label></label>
+        </div>
+      </td>
+      <td>{{ record.time_start }}</td>
+      <td>{{ record.time_end }}</td>
+      <td>{{ record.temperature }}</td>
+      <td>{{ record.humidity }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot class="full-width">
+    <tr>
+      <th></th>
+      <th colspan="4">
+        <button class="negative ui button">
+          <i id="usun_harmo" class="trash alternate icon"></i>
+          Usuń zaznaczone
+        </button>
+      </th>
+    </tr>
+  </tfoot>
+</table>
+
+
+
+<div class="ui modal">
+  <i class="close icon"></i>
+  <div class="header">
+    Dodaj sekcję
+  </div>
+  <div class="image content">
+
+      <div class="ui two column very relaxed grid">
+    <div class="column">
+      <p></p>
+      <div class="ui input">
+        <input id="harmo_start" type="text" placeholder="Godzina rozpoczęcia...">
+        </div>
+      <p></p>
+      <div class="ui input">
+        <input id="harmo_koniec" type="text" placeholder="Godzina zakończenia...">
+        </div>
+      <p></p>
+      <p></p>
+    </div>
+    <div class="column">
+      <p></p>
+      <div class="ui right labeled input">
+        <input id="harmo_temp" type="text" placeholder="Podaj temperaturę..">
+        <div class="ui basic label">
+            °C
+        </div>
+        </div>
+      <p></p>
+      <div class="ui right labeled input">
+        <input id="harmo_wilg" type="text" placeholder="Podaj wilgotność..">
+        <div class="ui basic label">
+            %
+        </div>
+      <p></p>
+      <p></p>
+    </div>
+  </div>
+</div>
+  </div>
+  <div class="actions">
+    <div id="wstaw_harmo" class="ui positive right labeled icon button">
+      Dodaj
+      <i class="checkmark icon"></i>
+    </div>
+  </div>
+</div>
+
+
+<script>
+$(document).ready(function() {
+
+    $("#off_all").click(function() {
+        $.ajax({
+          url: '/tuning/temperature',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on_temp": 0}),
+          dataType: 'json'
+        })
+
+        $.ajax({
+          url: '/tuning/humidity',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on_hum": 0}),
+          dataType: 'json'
+        })
+
+        $.ajax({
+          url: '/continuous/run',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on": 0}),
+          dataType: 'json'
+        })
+
+        $.ajax({
+          url: '/schedule',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on": 0}),
+          dataType: 'json'
+        })
+
+        location.reload()
+    })
+
+
+    $("#start_tuning_temp").click(function() {
+        $.ajax({
+          url: '/tuning/temperature',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on_temp": 1}),
+          dataType: 'json'
+        })
+        location.reload()
+    })
+
+
+    $("#start_tuning_wilg").click(function() {
+        $.ajax({
+          url: '/tuning/humidity',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on_hum": 1}),
+          dataType: 'json'
+        })
+        location.reload()
+    })
+
+
+    $("#start_ciagly").click(function() {
+
+        var ctemp = $("#ciagly_temp").val();
+        var chum = $("#ciagly_wilg").val();
+
+        $.ajax({
+          url: '/continuous',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"temperature": ctemp, "humidity": chum, "turned_on": 1}),
+          dataType: 'json'
+        })
+
+        $.ajax({
+          url: '/schedule',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on": 0}),
+          dataType: 'json'
+        })
+        location.reload()
+    })
+
+
+    $("#start_harmo").click(function() {
+        $.ajax({
+          url: '/schedule',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on": 1}),
+          dataType: 'json'
+        })
+
+        $.ajax({
+          url: '/continuous/run',
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({"turned_on": 0}),
+          dataType: 'json'
+        })
+        location.reload()
+    })
+
+
+    $("#dodaj_harmo").click(function() {
+      $('.ui.modal').modal('show');
+    })
+
+
+    $("#wstaw_harmo").click(function() {
+      var start = $("#harmo_start").val();
+      var koniec = $("#harmo_koniec").val();
+      var temp = $("#harmo_temp").val();
+      var hum = $("#harmo_wilg").val();
+
+      $.ajax({
+      url: '/records',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({"time_start": start, "time_end": koniec, "temperature": temp, "humidity": hum}),
+      dataType: 'json'
+      })
+
+      $('.ui.modal').modal('hide');
+      location.reload()
+    })
+
+
+    $("#usun_harmo").click(function() {
+      var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+      checkboxes.forEach(function(checkbox) {
+      var checkbox_id = checkbox.id
+        $.ajax({
+          url: '/records/delete',
+          type: 'DELETE',
+          contentType: 'application/json',
+          data: JSON.stringify({"id": checkbox_id }),
+          dataType: 'json'
+        })
+      });
+      location.reload()
+    })
+});
+</script>
+{% endblock %}
